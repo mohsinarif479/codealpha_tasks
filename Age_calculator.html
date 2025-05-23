@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Age Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .calculator {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    input[type="date"] {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background-color: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #4338ca;
+    }
+
+    .result {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #111827;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <h2>Age Calculator</h2>
+    <label for="dob">Select Your Date of Birth:</label><br/><br/>
+    <input type="date" id="dob" max="" /><br/>
+    <button onclick="calculateAge()">Calculate Age</button>
+    <div class="result" id="ageResult"></div>
+  </div>
+
+  <script>
+    // Set today's date as max for DOB input
+    document.getElementById("dob").max = new Date().toISOString().split("T")[0];
+
+    function calculateAge() {
+      const dobInput = document.getElementById("dob").value;
+      const resultDiv = document.getElementById("ageResult");
+
+      if (!dobInput) {
+        resultDiv.textContent = "Please select a valid date of birth.";
+        return;
+      }
+
+      const dob = new Date(dobInput);
+      const today = new Date();
+
+      let years = today.getFullYear() - dob.getFullYear();
+      let months = today.getMonth() - dob.getMonth();
+      let days = today.getDate() - dob.getDate();
+
+      if (days < 0) {
+        months--;
+        days += new Date(today.getFullYear(), today.getMonth(), 0).getDate();
+      }
+
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+
+      resultDiv.textContent = `You are ${years} years, ${months} months, and ${days} days old.`;
+    }
+  </script>
+</body>
+</html>

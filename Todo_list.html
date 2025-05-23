@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>To-Do App with Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 40px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    input[type="text"], input[type="password"] {
+      width: calc(100% - 20px);
+      margin: 5px 0;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 10px;
+      width: 100%;
+      font-size: 16px;
+      background-color: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #4338ca;
+    }
+
+    .task-section, .auth-section {
+      margin-top: 20px;
+    }
+
+    ul {
+      padding: 0;
+      list-style: none;
+      margin-top: 20px;
+    }
+
+    li {
+      background: #f3f4f6;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .completed {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    .priority-high { border-left: 5px solid red; }
+    .priority-medium { border-left: 5px solid orange; }
+    .priority-low { border-left: 5px solid green; }
+
+    .task-actions button {
+      margin-left: 5px;
+      background: #d1d5db;
+      color: black;
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+
+    .task-actions button:hover {
+      background: #9ca3af;
+    }
+
+    #logoutBtn {
+      background-color: #ef4444;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="authSection" class="auth-section">
+      <h2>Login / Register</h2>
+      <input type="text" id="username" placeholder="Username" />
+      <input type="password" id="password" placeholder="Password" />
+      <button onclick="register()">Register</button>
+      <button onclick="login()">Login</button>
+    </div>
+
+    <div id="todoSection" style="display: none;">
+      <h2>Welcome, <span id="userDisplay"></span>!</h2>
+      <input type="text" id="taskInput" placeholder="Enter a task..." />
+      <select id="prioritySelect">
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+      </select>
+      <button onclick="addTask()">Add Task</button>
+      <ul id="taskList"></ul>
+      <button id="logoutBtn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = localStorage.getItem("sessionUser");
+
+    function saveUsers(users) {
+      localStorage.setItem("users", JSON.stringify(users));
+    }
+
+    function getUsers() {
+      return JSON.parse(localStorage.getItem("users")) || {};
+    }
+
+    function register() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const users = getUsers();
+
+      if (!username || !password) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      if (users[username]) {
+        alert("Username already exists.");
+        return;
+      }
+
+      users[username] = { password, tasks: [] };
+      saveUsers(users);
+      alert("Registered successfully. You can now login.");
+    }
+
+    function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const users = getUsers();
+
+      if (users[username] && users[username].password === password) {
+        currentUser = username;
+        localStorage.setItem("sessionUser", currentUser);
+        loadApp();
+      } else {
+        alert("Invalid credentials.");
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("sessionUser");
+      currentUser = null;
+      location.reload();
+    }
+
+    function loadApp() {
+      document.getElementById("authSection").style.display = "none";
+      document.getElementById("todoSection").style.display = "block";
+      document.getElementById("userDisplay").textContent = currentUser;
+      renderTasks();
+    }
+
+    function getTasks() {
+      const users = getUsers();
+      return users[currentUser].tasks;
+    }
+
+    function saveTasks(tasks) {
+      const users = getUsers();
+      users[currentUser].tasks = tasks;
+      saveUsers(users);
+    }
+
+    function renderTasks() {
+      const taskList = document.getElementById("taskList");
+      taskList.innerHTML = "";
+
+      const tasks = getTasks();
+      tasks.forEach((task, index) => {
+        const li = document.createElement("li");
+        li.className = `priority-${task.priority}`;
+
+        const span = document.createElement("span");
+        span.textContent = task.text;
+        if (task.completed) span.classList.add("completed");
+
+        const actions = document.createElement("div");
+        actions.className = "task-actions";
+
+        const completeBtn = document.createElement("button");
+        completeBtn.textContent = task.completed ? "Undo" : "Complete";
+        completeBtn.onclick = () => toggleComplete(index);
+
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "Edit";
+        editBtn.onclick = () => editTask(index);
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Delete";
+        deleteBtn.onclick = () => deleteTask(index);
+
+        actions.appendChild(completeBtn);
+        actions.appendChild(editBtn);
+        actions.appendChild(deleteBtn);
+
+        li.appendChild(span);
+        li.appendChild(actions);
+        taskList.appendChild(li);
+      });
+    }
+
+    function addTask() {
+      const text = document.getElementById("taskInput").value.trim();
+      const priority = document.getElementById("prioritySelect").value;
+
+      if (text === "") return;
+
+      const tasks = getTasks();
+      tasks.push({ text, priority, completed: false });
+      saveTasks(tasks);
+      document.getElementById("taskInput").value = "";
+      renderTasks();
+    }
+
+    function toggleComplete(index) {
+      const tasks = getTasks();
+      tasks[index].completed = !tasks[index].completed;
+      saveTasks(tasks);
+      renderTasks();
+    }
+
+    function deleteTask(index) {
+      const tasks = getTasks();
+      tasks.splice(index, 1);
+      saveTasks(tasks);
+      renderTasks();
+    }
+
+    function editTask(index) {
+      const tasks = getTasks();
+      const newText = prompt("Edit task:", tasks[index].text);
+      if (newText) {
+        tasks[index].text = newText;
+        saveTasks(tasks);
+        renderTasks();
+      }
+    }
+
+    // Auto-login if session exists
+    if (currentUser) {
+      loadApp();
+    }
+  </script>
+</body>
+</html>
